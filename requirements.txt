@@ -1,0 +1,24 @@
+# Install with: pip install -r requirements.txt
+
+# Kafka
+confluent-kafka==2.3.0
+
+# Reddit
+praw==7.7.1
+
+# NLP / FinBERT (downloads model on first run)
+transformers==4.37.0
+torch==2.1.0          # CPU version — no GPU needed
+
+# Database
+psycopg2-binary==2.9.9
+
+# Redis
+redis==5.0.1
+
+# PySpark (local mode)
+pyspark==3.5.0
+
+# Utilities
+python-dotenv==1.0.0
+requests==2.31.0

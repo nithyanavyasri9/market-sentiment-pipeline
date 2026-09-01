@@ -1,0 +1,75 @@
+{
+  "title": "Market Sentiment Pipeline",
+  "uid": "market-sentiment-v1",
+  "refresh": "10s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1, "gridPos": { "x": 0, "y": 0, "w": 24, "h": 3 },
+      "type": "stat", "title": "Latest Signals",
+      "targets": [{
+        "datasource": "PostgreSQL",
+        "rawSql": "SELECT ticker AS metric, signal AS \"Signal\", round(sentiment_score::numeric,3) AS \"Score\", round(avg_price::numeric,2) AS \"Price\", mention_count AS \"Mentions\" FROM sentiment_signals ORDER BY window_start DESC LIMIT 10",
+        "format": "table"
+      }],
+      "options": { "colorMode": "background" },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [{
+          "matcher": { "id": "byName", "options": "Signal" },
+          "properties": [{
+            "id": "mappings",
+            "value": [
+              { "type": "value", "options": { "BULLISH": { "color": "green",  "index": 0 } } },
+              { "type": "value", "options": { "BEARISH": { "color": "red",    "index": 1 } } },
+              { "type": "value", "options": { "NEUTRAL": { "color": "yellow", "index": 2 } } }
+            ]
+          }]
+        }]
+      }
+    },
+    {
+      "id": 2, "gridPos": { "x": 0, "y": 3, "w": 12, "h": 8 },
+      "type": "timeseries", "title": "Sentiment Score Over Time (per ticker)",
+      "targets": [{
+        "datasource": "PostgreSQL",
+        "rawSql": "SELECT window_start AS time, sentiment_score, ticker AS metric FROM sentiment_signals WHERE window_start >= NOW() - INTERVAL '1 hour' ORDER BY time",
+        "format": "time_series"
+      }],
+      "fieldConfig": {
+        "defaults": { "custom": { "lineWidth": 2 }, "unit": "short" }
+      }
+    },
+    {
+      "id": 3, "gridPos": { "x": 12, "y": 3, "w": 12, "h": 8 },
+      "type": "timeseries", "title": "Average Price per Ticker",
+      "targets": [{
+        "datasource": "PostgreSQL",
+        "rawSql": "SELECT window_start AS time, avg_price, ticker AS metric FROM sentiment_signals WHERE window_start >= NOW() - INTERVAL '1 hour' ORDER BY time",
+        "format": "time_series"
+      }],
+      "fieldConfig": {
+        "defaults": { "custom": { "lineWidth": 2 }, "unit": "currencyUSD" }
+      }
+    },
+    {
+      "id": 4, "gridPos": { "x": 0, "y": 11, "w": 12, "h": 8 },
+      "type": "barchart", "title": "Mention Count by Ticker (last hour)",
+      "targets": [{
+        "datasource": "PostgreSQL",
+        "rawSql": "SELECT ticker, SUM(mention_count) AS mentions FROM sentiment_signals WHERE window_start >= NOW() - INTERVAL '1 hour' GROUP BY ticker ORDER BY mentions DESC",
+        "format": "table"
+      }]
+    },
+    {
+      "id": 5, "gridPos": { "x": 12, "y": 11, "w": 12, "h": 8 },
+      "type": "table", "title": "Signal Log",
+      "targets": [{
+        "datasource": "PostgreSQL",
+        "rawSql": "SELECT window_start AS \"Time\", ticker AS \"Ticker\", signal AS \"Signal\", round(sentiment_score::numeric,3) AS \"Sentiment\", round(avg_price::numeric,2) AS \"Price $\", mention_count AS \"Mentions\" FROM sentiment_signals ORDER BY window_start DESC LIMIT 50",
+        "format": "table"
+      }],
+      "options": { "sortBy": [{ "displayName": "Time", "desc": true }] }
+    }
+  ]
+}
